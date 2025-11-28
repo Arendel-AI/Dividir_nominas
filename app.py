@@ -15,41 +15,57 @@ def limpiar_nombre(nombre: str) -> str:
 
 # --- Función para extraer nombre del texto ---
 def extraer_nombre(texto: str) -> str:
-    # Ejemplo: "TRABAJADOR/A CATEGORIA NºMATRIC ... \nJUAN PEREZ GOMEZ PERSONAL ..."
     patron = r"TRABAJADOR/A.*?\n\s*([A-ZÁÉÍÓÚÑ ]{5,})\s+PERSONAL"
     m = re.search(patron, texto, re.DOTALL)
     if m:
         return m.group(1).strip()
     return None
 
-# --- App Streamlit ---
+# --- CONFIG ---
 st.set_page_config(page_title="Separador de Nóminas PDF", page_icon="📄", layout="centered")
 
-st.title("Separador de Nóminas PDF – Arendel Tools")
+# --- CSS para firma ---
+st.markdown("""
+<style>
+.footer {
+    position: fixed;
+    left: 0;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    color: #888888;
+    font-size: 14px;
+}
+</style>
+<div class="footer">Elim</div>
+""", unsafe_allow_html=True)
+
+# --- APP ---
+st.title("📄 Separador de Nóminas PDF – Arendel Tools")
 st.write("Sube un PDF con múltiples nóminas y esta herramienta generará un PDF por trabajador.")
 
 uploaded_file = st.file_uploader("Sube el PDF con las nóminas", type=["pdf"])
 
 if uploaded_file:
     pdf_reader = PdfReader(uploaded_file)
-    st.info(f"El PDF tiene {len(pdf_reader.pages)} páginas.")
+    st.info(f"📑 El PDF tiene {len(pdf_reader.pages)} páginas.")
     progreso = st.progress(0)
     trabajadores = {}
-    
+
     for i, page in enumerate(pdf_reader.pages):
         texto = page.extract_text() or ""
         nombre = extraer_nombre(texto)
         if not nombre:
             nombre = f"Pagina_{i+1}"
         nombre_limpio = limpiar_nombre(nombre)
-        
-        # Añadir página al grupo del trabajador
+
         if nombre_limpio not in trabajadores:
             trabajadores[nombre_limpio] = []
         trabajadores[nombre_limpio].append(i)
+
         progreso.progress((i+1)/len(pdf_reader.pages))
 
-    st.success(f"Se detectaron {len(trabajadores)} trabajadores únicos.")
+    st.success(f"✅ Se detectaron {len(trabajadores)} trabajadores únicos.")
 
     if st.button("Generar PDFs individuales y descargar ZIP"):
         zip_buffer = io.BytesIO()
@@ -64,7 +80,7 @@ if uploaded_file:
                 zipf.writestr(f"{nombre}.pdf", pdf_bytes.read())
         zip_buffer.seek(0)
         st.download_button(
-            label="Descargar ZIP con nóminas separadas",
+            label="⬇️ Descargar ZIP con nóminas separadas",
             data=zip_buffer,
             file_name="nominas_separadas.zip",
             mime="application/zip"
