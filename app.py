@@ -44,7 +44,7 @@ if uploaded_file:
     
     st.info(f"📑 El PDF tiene {total_pages} páginas.")
 
-    if st.button("Generar PDFs individuales y descargar ZIP"):
+    if st.button("Generar PDFs individuales"):
         
         # Barra de progreso
         progress = st.progress(0)
